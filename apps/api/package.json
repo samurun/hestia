@@ -11,12 +11,16 @@
     "start": "bun src/index.ts",
     "lint": "eslint",
     "format": "prettier --write \"**/*.ts\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:unit": "bun test unit.test",
+    "test:integration": "bun test --preload ./test/db.ts integration.test",
+    "test:e2e": "bun test --preload ./test/db.ts e2e.test"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.2",
     "@elysiajs/openapi": "^1.4.16",
     "@workspace/db": "workspace:*",
+    "better-auth": "^1.7.12",
     "elysia": "^1.4.30",
     "zod": "^4.6.7"
   },

@@ -1,3 +1,3 @@
-export { sql } from "drizzle-orm"
+export { eq, sql } from "drizzle-orm"
 export * from "./client"
 export * as schema from "./schema"

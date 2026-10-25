@@ -16,7 +16,7 @@
 ```bash
 bun install
 cp packages/db/.env.example packages/db/.env
-cp apps/api/.env.example apps/api/.env
+cp apps/api/.env.example apps/api/.env   # แล้วใส่ BETTER_AUTH_SECRET (openssl rand -base64 32)
 cp apps/web/.env.example apps/web/.env.local
 
 bun db:up        # Postgres 18 ใน Docker (พอร์ต 5433)
@@ -24,6 +24,21 @@ bun db:migrate
 bun db:seed      # org ตัวอย่าง 1 อัน
 bun dev          # web + api
 ```
+
+## Test
+
+```bash
+bun run test               # รันครบ 3 ระดับตามลำดับ
+bun test:unit              # *.unit.test.ts — ไม่แตะฐานข้อมูล
+bun test:integration       # *.integration.test.ts — เรียก app.handle() กับฐานข้อมูลจริง
+bun test:e2e               # *.e2e.test.ts — เปิด server จริงแล้วยิงผ่าน HTTP
+```
+
+integration และ e2e ใช้ฐานข้อมูล `hestia_test` ที่ถูกสร้าง migrate และล้างข้อมูลใหม่ทุกครั้งที่รัน (ต้อง `bun db:up` ไว้ก่อน) และไม่แตะฐานข้อมูล dev
+
+## Auth
+
+ใช้ Better Auth ที่ `/api/auth/*` (สมัคร/ล็อกอินด้วยอีเมล + รหัสผ่าน, session แบบ cookie) route ที่ต้องล็อกอินให้ใส่ `auth: true` แล้วจะได้ `user` และ `session` ใน handler
 
 ## ฐานข้อมูล
 
