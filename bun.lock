@@ -20,6 +20,7 @@
         "@elysiajs/cors": "^1.4.2",
         "@elysiajs/openapi": "^1.4.16",
         "@workspace/db": "workspace:*",
+        "@workspace/shared": "workspace:*",
         "better-auth": "^1.7.12",
         "elysia": "^1.4.30",
         "zod": "^4.6.7",
@@ -37,6 +38,7 @@
       "version": "0.0.1",
       "dependencies": {
         "@elysiajs/eden": "^1.4.9",
+        "@workspace/shared": "workspace:*",
         "@workspace/ui": "workspace:*",
         "better-auth": "^1.7.12",
         "lucide-react": "^1.61.0",
@@ -94,6 +96,20 @@
         "eslint-plugin-react-hooks": "^7.1.1",
         "eslint-plugin-turbo": "^2.11.10",
         "globals": "^17.13.0",
+      },
+    },
+    "packages/shared": {
+      "name": "@workspace/shared",
+      "version": "0.0.0",
+      "dependencies": {
+        "zod": "^4.6.7",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "@workspace/eslint-config": "workspace:*",
+        "@workspace/typescript-config": "workspace:*",
+        "eslint": "^10",
+        "typescript": "^5",
       },
     },
     "packages/typescript-config": {
@@ -546,6 +562,8 @@
     "@workspace/db": ["@workspace/db@workspace:packages/db"],
 
     "@workspace/eslint-config": ["@workspace/eslint-config@workspace:packages/eslint-config"],
+
+    "@workspace/shared": ["@workspace/shared@workspace:packages/shared"],
 
     "@workspace/typescript-config": ["@workspace/typescript-config@workspace:packages/typescript-config"],
 

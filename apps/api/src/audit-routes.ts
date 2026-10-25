@@ -1,25 +1,27 @@
 import { and, desc, eq, gte, lt, schema } from "@workspace/db"
-import { Elysia, status, t } from "elysia"
+import {
+  auditLogQuery,
+  messageError,
+  uuid,
+  validationError,
+} from "@workspace/shared/schemas"
+import { Elysia } from "elysia"
+import { z } from "zod"
 
 import { rbacPlugin } from "./plugins/rbac"
 
 const { auditLogs, users } = schema
 
-const Message = t.Object({ message: t.String() })
-const Uuid = t.String({ format: "uuid" })
-
-const AuditLogItem = t.Object({
-  id: Uuid,
-  action: t.String(),
-  entity: t.String(),
-  entityId: t.Nullable(Uuid),
-  actor: t.Nullable(
-    t.Object({ id: Uuid, name: t.String(), email: t.String() })
-  ),
-  before: t.Unknown(),
-  after: t.Unknown(),
-  ip: t.Nullable(t.String()),
-  createdAt: t.String({ format: "date-time" }),
+const AuditLogItem = z.object({
+  id: uuid,
+  action: z.string(),
+  entity: z.string(),
+  entityId: uuid.nullable(),
+  actor: z.object({ id: uuid, name: z.string(), email: z.string() }).nullable(),
+  before: z.unknown(),
+  after: z.unknown(),
+  ip: z.string().nullable(),
+  createdAt: z.iso.datetime(),
 })
 
 export const auditRoutes = new Elysia({ prefix: "/audit-logs" })
@@ -28,11 +30,9 @@ export const auditRoutes = new Elysia({ prefix: "/audit-logs" })
     "/",
     async ({ query, orgTx }) => {
       const limit = query.limit ?? 50
+      // auditLogQuery already rejects an inverted range.
       const from = query.from === undefined ? undefined : new Date(query.from)
       const to = query.to === undefined ? undefined : new Date(query.to)
-      if (from && to && from >= to) {
-        throw status(422, { message: "from must be earlier than to" })
-      }
 
       const defined = <T>(value: T | undefined) => value !== undefined
       const filters = [
@@ -86,24 +86,15 @@ export const auditRoutes = new Elysia({ prefix: "/audit-logs" })
     {
       org: true,
       permission: "audit.read",
-      query: t.Object({
-        action: t.Optional(t.String({ minLength: 1 })),
-        entity: t.Optional(t.String({ minLength: 1 })),
-        entityId: t.Optional(Uuid),
-        actorId: t.Optional(Uuid),
-        from: t.Optional(t.String({ format: "date-time" })),
-        to: t.Optional(t.String({ format: "date-time" })),
-        cursor: t.Optional(Uuid),
-        limit: t.Optional(t.Numeric({ minimum: 1, maximum: 100 })),
-      }),
+      query: auditLogQuery,
       response: {
-        200: t.Object({
-          items: t.Array(AuditLogItem),
-          nextCursor: t.Nullable(Uuid),
+        200: z.object({
+          items: z.array(AuditLogItem),
+          nextCursor: uuid.nullable(),
         }),
-        401: Message,
-        403: Message,
-        422: Message,
+        401: messageError,
+        403: messageError,
+        422: validationError,
       },
       detail: {
         tags: ["Audit"],

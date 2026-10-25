@@ -1,16 +1,17 @@
 import { memberRole } from "@workspace/db/schema"
-import { t } from "elysia"
+import { uuid } from "@workspace/shared/schemas"
+import { z } from "zod"
 
 // Pure types and rules for orgs; no DB or auth imports, so unit tests can
 // load this without a database.
 
-export const OrgMembership = t.Object({
-  id: t.String({ format: "uuid" }),
-  name: t.String(),
-  role: t.UnionEnum(memberRole.enumValues),
+export const OrgMembership = z.object({
+  id: uuid,
+  name: z.string(),
+  role: z.enum(memberRole.enumValues),
 })
 
-export type OrgMembership = typeof OrgMembership.static
+export type OrgMembership = z.infer<typeof OrgMembership>
 
 /**
  * The org a new session should start in: the last one the user used if they

@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@elysiajs/eden": "^1.4.9",
+    "@workspace/shared": "workspace:*",
     "@workspace/ui": "workspace:*",
     "better-auth": "^1.7.12",
     "lucide-react": "^1.61.0",

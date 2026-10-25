@@ -1,12 +1,18 @@
 import { eq, inArray, schema } from "@workspace/db"
-import { Elysia, status, t } from "elysia"
+import {
+  membershipParams,
+  messageError,
+  setMembershipPropertiesBody,
+  uuid,
+  validationError,
+} from "@workspace/shared/schemas"
+import { Elysia, status } from "elysia"
+import { z } from "zod"
 
 import { rbacPlugin } from "./plugins/rbac"
 import { can } from "./rbac"
 
 const { membershipProperties, memberships, properties } = schema
-
-const Message = t.Object({ message: t.String() })
 
 export const membershipRoutes = new Elysia({ prefix: "/memberships" })
   .use(rbacPlugin)
@@ -71,19 +77,15 @@ export const membershipRoutes = new Elysia({ prefix: "/memberships" })
     {
       org: true,
       permission: "members.manage",
-      params: t.Object({ membershipId: t.String({ format: "uuid" }) }),
-      body: t.Object({
-        propertyIds: t.Array(t.String({ format: "uuid" }), { maxItems: 500 }),
-      }),
+      params: membershipParams,
+      body: setMembershipPropertiesBody,
       response: {
-        200: t.Object({
-          membershipId: t.String({ format: "uuid" }),
-          propertyIds: t.Array(t.String({ format: "uuid" })),
-        }),
-        401: Message,
-        403: Message,
-        404: Message,
-        422: Message,
+        200: z.object({ membershipId: uuid, propertyIds: z.array(uuid) }),
+        401: messageError,
+        403: messageError,
+        404: messageError,
+        // Request validation, or an owner / unknown-property rejection.
+        422: z.union([validationError, messageError]),
       },
       detail: {
         tags: ["Members"],
