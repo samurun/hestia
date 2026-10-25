@@ -1,5 +1,5 @@
 {
-  "id": "15df4148-69f7-4fca-8009-00f32fc12890",
+  "id": "acaba4d6-236e-4332-8ab6-21fd5a09f708",
   "prevId": "cbd2ce7d-f442-4a83-a29d-1911246b0494",
   "version": "7",
   "dialect": "postgresql",
@@ -285,6 +285,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "last_active_org_id": {
+          "name": "last_active_org_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -301,7 +307,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "users_last_active_org_id_organizations_id_fk": {
+          "name": "users_last_active_org_id_organizations_id_fk",
+          "tableFrom": "users",
+          "tableTo": "organizations",
+          "columnsFrom": [
+            "last_active_org_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "users_email_unique": {
@@ -480,7 +500,12 @@
           "using": "id in (select org_id from memberships where user_id = nullif(current_setting('app.user_id', true), '')::uuid)"
         }
       },
-      "checkConstraints": {},
+      "checkConstraints": {
+        "organizations_name_check": {
+          "name": "organizations_name_check",
+          "value": "char_length(\"organizations\".\"name\") between 1 and 200 and \"organizations\".\"name\" = btrim(\"organizations\".\"name\")"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.memberships": {
@@ -588,12 +613,11 @@
         "org_isolation": {
           "name": "org_isolation",
           "as": "PERMISSIVE",
-          "for": "ALL",
+          "for": "SELECT",
           "to": [
             "hestia_app"
           ],
-          "using": "org_id = nullif(current_setting('app.org_id', true), '')::uuid",
-          "withCheck": "org_id = nullif(current_setting('app.org_id', true), '')::uuid"
+          "using": "org_id = nullif(current_setting('app.org_id', true), '')::uuid"
         },
         "own_memberships": {
           "name": "own_memberships",
@@ -603,6 +627,34 @@
             "hestia_app"
           ],
           "using": "user_id = nullif(current_setting('app.user_id', true), '')::uuid"
+        },
+        "owner_insert": {
+          "name": "owner_insert",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "hestia_app"
+          ],
+          "withCheck": "org_id = nullif(current_setting('app.org_id', true), '')::uuid and (\n        app_is_org_owner(org_id, nullif(current_setting('app.user_id', true), '')::uuid)\n        or (user_id = nullif(current_setting('app.user_id', true), '')::uuid and role = 'owner' and not app_org_has_members(org_id))\n      )"
+        },
+        "owner_update": {
+          "name": "owner_update",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "hestia_app"
+          ],
+          "using": "org_id = nullif(current_setting('app.org_id', true), '')::uuid and app_is_org_owner(org_id, nullif(current_setting('app.user_id', true), '')::uuid)",
+          "withCheck": "org_id = nullif(current_setting('app.org_id', true), '')::uuid and app_is_org_owner(org_id, nullif(current_setting('app.user_id', true), '')::uuid)"
+        },
+        "owner_delete": {
+          "name": "owner_delete",
+          "as": "PERMISSIVE",
+          "for": "DELETE",
+          "to": [
+            "hestia_app"
+          ],
+          "using": "org_id = nullif(current_setting('app.org_id', true), '')::uuid and app_is_org_owner(org_id, nullif(current_setting('app.user_id', true), '')::uuid)"
         }
       },
       "checkConstraints": {},

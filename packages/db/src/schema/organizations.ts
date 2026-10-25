@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm"
 import {
   boolean,
+  check,
   jsonb,
   pgPolicy,
   pgTable,
@@ -49,7 +50,11 @@ export const organizations = pgTable(
       .default(defaultOrgSettings),
     ...timestamps,
   },
-  () => [
+  (t) => [
+    check(
+      "organizations_name_check",
+      sql`char_length(${t.name}) between 1 and 200 and ${t.name} = btrim(${t.name})`
+    ),
     orgIsolation("id"),
     // Lets a user list every org they belong to, before picking one.
     pgPolicy("member_read", {

@@ -19,6 +19,10 @@ export const users = pgTable("users", {
   email: text().notNull().unique(),
   emailVerified: boolean().notNull().default(false),
   image: text(),
+  // Restored as the active org on the next sign-in.
+  lastActiveOrgId: uuid().references(() => organizations.id, {
+    onDelete: "set null",
+  }),
   ...timestamps,
 })
 
