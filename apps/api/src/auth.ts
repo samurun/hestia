@@ -22,6 +22,12 @@ export const auth = betterAuth({
   // "uuid" lets Postgres fill ids from the uuidv7() column default.
   advanced: { database: { generateId: "uuid" } },
   emailAndPassword: { enabled: true },
+  session: {
+    additionalFields: {
+      // Set only by POST /organizations and /organizations/active.
+      activeOrgId: { type: "string", required: false, input: false },
+    },
+  },
   plugins: [openAPI()],
 })
 
