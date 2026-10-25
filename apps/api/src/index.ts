@@ -11,7 +11,6 @@ export const app = new Elysia()
   .use(
     openapi({
       path: "/swagger",
-      provider: "swagger-ui",
       documentation: {
         info: { title: "Hestia API", version: "0.0.1" },
       },
