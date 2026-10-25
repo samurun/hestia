@@ -40,6 +40,18 @@ integration และ e2e ใช้ฐานข้อมูล `hestia_test` ท
 
 ใช้ Better Auth ที่ `/api/auth/*` (สมัคร/ล็อกอินด้วยอีเมล + รหัสผ่าน, session แบบ cookie) route ที่ต้องล็อกอินให้ใส่ `auth: true` แล้วจะได้ `user` และ `session` ใน handler
 
+route ที่ทำงานกับข้อมูลของ org ให้ `.use(orgPlugin)` แล้วใส่ `org: true` ระบบจะตรวจว่าล็อกอินแล้ว และเป็นสมาชิกของ active org ใน session ถ้าไม่ผ่านจะได้ 401 หรือ 403 handler จะได้ค่าต่อไปนี้
+- `org`: `{ id, name, role }`
+- `orgTx(fn)`: เปิด transaction ที่ตั้ง RLS ของ org นั้นให้แล้ว เห็นข้อมูลเฉพาะ org ที่ active อยู่ แม้ผู้ใช้จะเป็นสมาชิกหลาย org และล็อก membership ไว้จนจบ transaction ถ้าถูกถอดออกระหว่าง request จะได้ 403 ห้ามเรียก `db` ตรงๆ สำหรับข้อมูลของ org
+
+```ts
+new Elysia()
+  .use(orgPlugin)
+  .get("/units", ({ orgTx }) => orgTx((tx) => tx.select().from(units)), {
+    org: true,
+  })
+```
+
 ## ฐานข้อมูล
 
 - แก้ schema ใน `packages/db/src/schema/` แล้วรัน `bun db:generate` และ `bun db:migrate`
