@@ -8,7 +8,7 @@ const BASE = useServer(3998)
 type Org = { id: string; name: string; role: string }
 
 describe("organizations over HTTP", () => {
-  test("sign up → create org → create second → switch back", async () => {
+  test("sign up → create orgs → switch → sign in again restores it", async () => {
     const request = createClient(BASE)
     await request("/api/auth/sign-up/email", {
       json: {
@@ -36,6 +36,13 @@ describe("organizations over HTTP", () => {
       json: { orgId: first.id },
     })
     expect(switched.status).toBe(200)
+    expect((await me())?.id).toBe(first.id)
+
+    // A new session starts in the last-used org.
+    await request("/api/auth/sign-out", { json: {} })
+    await request("/api/auth/sign-in/email", {
+      json: { email: "org-e2e@example.com", password: "correct-horse-battery" },
+    })
     expect((await me())?.id).toBe(first.id)
   })
 })

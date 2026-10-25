@@ -1,8 +1,6 @@
 import { describe, expect, test } from "bun:test"
 
-import "../test/env"
-
-import { prefixAuthPaths } from "./auth"
+import { prefixAuthPaths } from "./openapi"
 
 describe("prefixAuthPaths", () => {
   test("prefixes every path and tags each operation as Auth", () => {
