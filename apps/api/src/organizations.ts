@@ -1,15 +1,36 @@
-import { schema, withContext } from "@workspace/db"
+import { eq, schema, withContext } from "@workspace/db"
 import { Elysia, t } from "elysia"
 
 import { db } from "./db"
 import { findMembership, listMemberships, setActiveOrg } from "./memberships"
-import { OrgMembership } from "./org-model"
+import { NOT_MEMBER, OrgMembership } from "./org-model"
 import { authPlugin } from "./plugins/auth"
+import { orgPlugin } from "./plugins/org"
 
-const { auditLogs, memberships, organizations } = schema
+const { auditLogs, defaultOrgSettings, memberships, organizations } = schema
+
+const OrgSettings = t.Object({
+  graceDays: t.Integer(),
+  lateFeePerDay: t.Integer(),
+  lateFeeCap: t.Nullable(t.Integer()),
+  bookingExpiryDays: t.Integer(),
+  bookingForfeitOnCancel: t.Boolean(),
+})
+
+const CurrentOrganization = t.Composite([
+  OrgMembership,
+  t.Object({
+    taxId: t.Nullable(t.String()),
+    branchCode: t.String(),
+    isVatRegistered: t.Boolean(),
+    address: t.Nullable(t.String()),
+    promptpayId: t.Nullable(t.String()),
+    settings: OrgSettings,
+  }),
+])
 
 const Message = t.Object({ message: t.String() })
-const notMember = { message: "Not a member of this organization" }
+const notMember = { message: NOT_MEMBER }
 
 export const organizationRoutes = new Elysia({ prefix: "/organizations" })
   .use(authPlugin)
@@ -90,6 +111,43 @@ export const organizationRoutes = new Elysia({ prefix: "/organizations" })
       detail: {
         tags: ["Organizations"],
         summary: "Switch active organization",
+      },
+    }
+  )
+
+/** Routes that act on the session's active org. */
+export const currentOrganizationRoutes = new Elysia({ prefix: "/organization" })
+  .use(orgPlugin)
+  .get(
+    "/",
+    async ({ org, orgTx, status }) => {
+      const [row] = await orgTx((tx) =>
+        tx
+          .select({
+            taxId: organizations.taxId,
+            branchCode: organizations.branchCode,
+            isVatRegistered: organizations.isVatRegistered,
+            address: organizations.address,
+            promptpayId: organizations.promptpayId,
+            settings: organizations.settings,
+          })
+          .from(organizations)
+          .where(eq(organizations.id, org.id))
+      )
+      if (!row) return status(403, notMember)
+      // Settings rows written before a key existed fall back to defaults.
+      return {
+        ...org,
+        ...row,
+        settings: { ...defaultOrgSettings, ...row.settings },
+      }
+    },
+    {
+      org: true,
+      response: { 200: CurrentOrganization, 401: Message, 403: Message },
+      detail: {
+        tags: ["Organizations"],
+        summary: "Active organization details",
       },
     }
   )

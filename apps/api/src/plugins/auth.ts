@@ -4,7 +4,12 @@ import { auth } from "../auth"
 
 /** Serves /api/auth/* and adds the `auth: true` route option. */
 export const authPlugin = new Elysia({ name: "auth" })
-  .mount(auth.handler)
+  // Only /api/auth/*: a root mount would answer every unmatched path in apps
+  // that use this plugin. parse: "none" leaves the body for Better Auth.
+  .all("/api/auth/*", ({ request }) => auth.handler(request), {
+    parse: "none",
+    detail: { hide: true },
+  })
   .macro({
     auth: {
       async resolve({ status, request: { headers } }) {

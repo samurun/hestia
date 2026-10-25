@@ -38,6 +38,14 @@ describe("organizations over HTTP", () => {
     expect(switched.status).toBe(200)
     expect((await me())?.id).toBe(first.id)
 
+    const current = await request("/organization")
+    expect(current.status).toBe(200)
+    expect(await current.json()).toMatchObject({
+      id: first.id,
+      name: "บ้านเช่าลุงดำ",
+      role: "owner",
+    })
+
     // A new session starts in the last-used org.
     await request("/api/auth/sign-out", { json: {} })
     await request("/api/auth/sign-in/email", {
