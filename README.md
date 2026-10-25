@@ -6,7 +6,7 @@
 
 | Path | หน้าที่ |
 |---|---|
-| `apps/web` | Next.js + shadcn (พอร์ต 3000) |
+| `apps/web` | Next.js 16 + shadcn (พอร์ต 3000) |
 | `apps/api` | Elysia API (พอร์ต 3001, Swagger UI ที่ `/swagger`) |
 | `packages/db` | Drizzle schema, migration, seed |
 | `packages/ui` | shadcn components |
@@ -25,14 +25,29 @@ bun db:seed      # org ตัวอย่าง 1 อัน
 bun dev          # web + api
 ```
 
+## Web
+
+- **เรียก API:** browser เรียกแค่ `/api/*` ของ web เอง แล้ว rewrite ใน `next.config.ts` ส่งต่อไปที่ API (`API_URL`) cookie ของ session จึงเป็น first-party ไม่ต้องตั้ง CORS หรือ cookie domain
+- **เช็คสิทธิ์:** `proxy.ts` ดูแค่ว่ามี cookie ไหม การตรวจจริงอยู่ใน `lib/dal.ts` (`requireMe()`, `requireActiveOrg()`) ให้เรียกจากทุกหน้า ไม่ใช่แค่จาก layout
+- **API client:** ฝั่ง server ใช้ `serverApi()` ฝั่ง client ใช้ `browserApi()` ทั้งคู่เป็น Eden ที่ type ตรงกับ API
+- **แยก UI กับ logic ตาม feature** (`features/<feature>/`)
+  - `components/` เป็น JSX ล้วน เรียก hook ของตัวเองตัวเดียว ห้ามเรียก API, router หรือ `useState` ของ logic ใน component
+  - `hooks/` เก็บ state, เรียก API และ redirect
+  - `schemas.ts` เป็น zod ข้อความภาษาไทย
+  - ของที่ใช้ร่วมกันทั้งแอปอยู่ใน `lib/` และ `hooks/`
+- **ฟอร์ม:** ใช้ `useFormSubmit(schema, submit)` จาก `hooks/use-form-submit.ts` hook ตัวนี้ validate, จัดการ pending และ error ให้ ฟังก์ชัน `submit` คืนข้อความ error หรือไม่คืนอะไรถ้าสำเร็จ แล้วแสดง error ด้วย `<FieldError errors={…} />`
+- **Query string:** ใช้ nuqs ประกาศ parser ไว้ใน `lib/search-params.ts` ให้ server ใช้ `createLoader` และ client ใช้ `useQueryState` อ่าน key เดียวกัน
+
 ## Test
 
 ```bash
 bun run test               # รันครบ 3 ระดับตามลำดับ
 bun test:unit              # *.unit.test.ts — ไม่แตะฐานข้อมูล
 bun test:integration       # *.integration.test.ts — เรียก app.handle() กับฐานข้อมูลจริง
-bun test:e2e               # *.e2e.test.ts — เปิด server จริงแล้วยิงผ่าน HTTP
+bun test:e2e               # api: *.e2e.test.ts ยิง HTTP · web: Playwright (e2e/*.e2e.ts)
 ```
+
+e2e ของ web ต้องติดตั้ง browser ครั้งแรกด้วย `bunx playwright install chromium` ตัวเทสต์จะ build Next ไปไว้ใน `.next-e2e` แล้วรันที่พอร์ต 3100 คู่กับ API พอร์ต 3101 จึงรันพร้อม `bun dev` ได้
 
 integration และ e2e ใช้ฐานข้อมูล `hestia_test` ที่ถูกสร้าง migrate และล้างข้อมูลใหม่ทุกครั้งที่รัน (ต้อง `bun db:up` ไว้ก่อน) และไม่แตะฐานข้อมูล dev
 
