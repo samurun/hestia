@@ -9,6 +9,7 @@
 | `apps/web` | Next.js 16 + shadcn (พอร์ต 3000) |
 | `apps/api` | Elysia API (พอร์ต 3001, Swagger UI ที่ `/swagger`) |
 | `packages/db` | Drizzle schema, migration, seed |
+| `packages/shared` | zod schema และค่าคงที่ที่ API กับ web ใช้ร่วมกัน |
 | `packages/ui` | shadcn components |
 
 ## เริ่มรันบนเครื่อง
@@ -50,6 +51,16 @@ bun test:e2e               # api: *.e2e.test.ts ยิง HTTP · web: Playwrigh
 e2e ของ web ต้องติดตั้ง browser ครั้งแรกด้วย `bunx playwright install chromium` ตัวเทสต์จะ build Next ไปไว้ใน `.next-e2e` แล้วรันที่พอร์ต 3100 คู่กับ API พอร์ต 3101 จึงรันพร้อม `bun dev` ได้
 
 integration และ e2e ใช้ฐานข้อมูล `hestia_test` ที่ถูกสร้าง migrate และล้างข้อมูลใหม่ทุกครั้งที่รัน (ต้อง `bun db:up` ไว้ก่อน) และไม่แตะฐานข้อมูล dev
+
+## Validation
+
+กฎ validation อยู่ใน `packages/shared` ที่เดียว (zod ข้อความภาษาไทย)
+- **API:** ใช้ schema ของ request เป็น `body` / `query` / `params` ของ Elysia ได้ตรงๆ ถ้าไม่ผ่านจะได้ 422 พร้อมข้อความจาก schema และ Scalar แสดง schema ผ่าน `z.toJSONSchema`
+- **web:** ใน `features/*/schemas.ts` ประกอบฟอร์มจาก field schema ชุดเดียวกัน
+- **สมัครสมาชิก:** endpoint ของ Better Auth ใช้ `signUpBody` ผ่าน hook ใน `auth.ts` (ไม่ผ่านได้ 400 `VALIDATION_ERROR`) ฟอร์มสมัครของ web ก็ต่อยอดจาก schema ตัวเดียวกัน
+- **รหัสผ่าน:** ความยาวอ่านจาก `PASSWORD_MIN_LENGTH` / `PASSWORD_MAX_LENGTH` ทั้งใน Better Auth และในฟอร์ม
+- **response:** ใช้ zod เหมือน request ส่วน error ใช้ `messageError` (error ที่ API ตอบเอง) และ `validationError` (422 จาก Elysia)
+- **DB:** CHECK constraint ยังอยู่ เป็นด่านสุดท้าย
 
 ## Auth
 
