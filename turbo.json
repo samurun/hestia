@@ -19,6 +19,15 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "test:unit": {
+      "dependsOn": ["^typecheck"]
+    },
+    "test:integration": {
+      "cache": false
+    },
+    "test:e2e": {
+      "cache": false
     }
   }
 }

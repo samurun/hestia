@@ -11,7 +11,10 @@
     "start": "bun src/index.ts",
     "lint": "eslint",
     "format": "prettier --write \"**/*.ts\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:unit": "bun test unit.test",
+    "test:integration": "bun test --preload ./test/db.ts integration.test",
+    "test:e2e": "bun test --preload ./test/db.ts e2e.test"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.2",
