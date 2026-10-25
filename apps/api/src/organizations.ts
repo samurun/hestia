@@ -1,48 +1,15 @@
-import { eq, schema, withContext } from "@workspace/db"
+import { schema, withContext } from "@workspace/db"
 import { Elysia, t } from "elysia"
 
 import { db } from "./db"
+import { findMembership, listMemberships, setActiveOrg } from "./memberships"
+import { OrgMembership } from "./org-model"
 import { authPlugin } from "./plugins/auth"
 
-const { auditLogs, memberRole, memberships, organizations, sessions } = schema
-
-export const OrgMembership = t.Object({
-  id: t.String({ format: "uuid" }),
-  name: t.String(),
-  role: t.UnionEnum(memberRole.enumValues),
-})
-
-export type OrgMembership = typeof OrgMembership.static
+const { auditLogs, memberships, organizations } = schema
 
 const Message = t.Object({ message: t.String() })
-
-/** Every org the user belongs to, with their role in it. */
-export function listMemberships(userId: string): Promise<OrgMembership[]> {
-  return withContext(db, { userId }, (tx) =>
-    tx
-      .select({
-        id: organizations.id,
-        name: organizations.name,
-        role: memberships.role,
-      })
-      .from(memberships)
-      .innerJoin(organizations, eq(organizations.id, memberships.orgId))
-      .where(eq(memberships.userId, userId))
-      .orderBy(organizations.name)
-  )
-}
-
-/**
- * The session's active org, or null when none is set or the user is no
- * longer a member of it.
- */
-export function resolveActiveOrg(
-  activeOrgId: string | null | undefined,
-  orgs: OrgMembership[]
-): OrgMembership | null {
-  if (!activeOrgId) return null
-  return orgs.find((org) => org.id === activeOrgId) ?? null
-}
+const notMember = { message: "Not a member of this organization" }
 
 export const organizationRoutes = new Elysia({ prefix: "/organizations" })
   .use(authPlugin)
@@ -63,7 +30,7 @@ export const organizationRoutes = new Elysia({ prefix: "/organizations" })
         async (tx) => {
           const [created] = await tx
             .insert(organizations)
-            .values({ id: orgId, name: body.name.trim() })
+            .values({ id: orgId, name: body.name })
             .returning({ id: organizations.id, name: organizations.name })
           await tx
             .insert(memberships)
@@ -76,10 +43,11 @@ export const organizationRoutes = new Elysia({ prefix: "/organizations" })
             entityId: orgId,
             after: created,
           })
-          await tx
-            .update(sessions)
-            .set({ activeOrgId: orgId })
-            .where(eq(sessions.id, session.id))
+          await setActiveOrg(tx, {
+            sessionId: session.id,
+            userId: user.id,
+            orgId,
+          })
           return created!
         }
       )
@@ -87,9 +55,12 @@ export const organizationRoutes = new Elysia({ prefix: "/organizations" })
     },
     {
       auth: true,
-      body: t.Object({
-        name: t.String({ minLength: 1, maxLength: 200, pattern: "\\S" }),
-      }),
+      // Trim before validation so the length limit applies to what is stored.
+      transform({ body }) {
+        const input = body as { name?: unknown }
+        if (typeof input?.name === "string") input.name = input.name.trim()
+      },
+      body: t.Object({ name: t.String({ minLength: 1, maxLength: 200 }) }),
       response: { 201: OrgMembership, 401: Message },
       detail: {
         tags: ["Organizations"],
@@ -102,15 +73,15 @@ export const organizationRoutes = new Elysia({ prefix: "/organizations" })
   .post(
     "/active",
     async ({ user, session, body, status }) => {
-      const org = resolveActiveOrg(body.orgId, await listMemberships(user.id))
-      if (!org) {
-        return status(403, { message: "Not a member of this organization" })
-      }
-      await db
-        .update(sessions)
-        .set({ activeOrgId: org.id })
-        .where(eq(sessions.id, session.id))
-      return org
+      const switched = await withContext(db, { userId: user.id }, (tx) =>
+        setActiveOrg(tx, {
+          sessionId: session.id,
+          userId: user.id,
+          orgId: body.orgId,
+        })
+      )
+      const org = switched && (await findMembership(user.id, body.orgId))
+      return org || status(403, notMember)
     },
     {
       auth: true,

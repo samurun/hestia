@@ -5,6 +5,8 @@ import { openAPI } from "better-auth/plugins"
 
 import { db } from "./db"
 import { env } from "./env"
+import { defaultActiveOrgId } from "./memberships"
+import { prefixAuthPaths, type OpenAPIPaths } from "./openapi"
 
 export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
@@ -28,24 +30,21 @@ export const auth = betterAuth({
       activeOrgId: { type: "string", required: false, input: false },
     },
   },
+  databaseHooks: {
+    session: {
+      create: {
+        // Sign-in restores the last-used org instead of starting empty.
+        before: async (session) => ({
+          data: {
+            ...session,
+            activeOrgId: await defaultActiveOrgId(session.userId),
+          },
+        }),
+      },
+    },
+  },
   plugins: [openAPI()],
 })
-
-type OpenAPIPaths = Record<string, Record<string, { tags?: string[] }>>
-
-/** Better Auth paths are relative to its basePath; tag them for Scalar. */
-export function prefixAuthPaths(paths: OpenAPIPaths, prefix = "/api/auth") {
-  const result: OpenAPIPaths = {}
-  for (const [path, operations] of Object.entries(paths)) {
-    result[prefix + path] = Object.fromEntries(
-      Object.entries(operations).map(([method, op]) => [
-        method,
-        { ...op, tags: ["Auth"] },
-      ])
-    )
-  }
-  return result
-}
 
 export async function authOpenAPI() {
   const { paths, components } = await auth.api.generateOpenAPISchema()
