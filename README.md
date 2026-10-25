@@ -63,6 +63,24 @@ new Elysia()
 - ตารางที่ผูกกับโครงการควรใช้ `app_can_read_property()` และ `app_can_manage_property()` แบบเดียวกับ `properties`
 - ใน TypeScript ให้ใช้ `can(role, "properties.all")` แทน `role === "owner"`
 
+## Audit log
+
+ทุกการเปลี่ยนแปลงเรื่องเงิน สัญญา สิทธิ์ผู้ใช้ และการตั้งค่า ต้องบันทึก audit log ใน route ที่มี `org: true` ให้เรียก `audit(tx, …)` ด้วย `tx` ตัวเดียวกับที่ทำการเปลี่ยนแปลง log กับข้อมูลจะได้ commit หรือ rollback ไปพร้อมกัน
+
+```ts
+orgTx(async (tx) => {
+  await tx.update(units).set(changes).where(eq(units.id, id))
+  await audit(tx, { action: "unit.update", entity: "unit", entityId: id, before, after: changes })
+})
+```
+
+- `action` ใช้รูปแบบ `<entity>.<verb>`
+- ระบบเติม actor, org และ IP ให้เอง
+- ตาราง `audit_logs` เพิ่มได้อย่างเดียว แก้ ลบ หรือ truncate ไม่ได้
+- owner ดู log ได้ที่ `GET /audit-logs` (มี filter และ cursor)
+- IP ได้มาจาก socket ถ้ารันอยู่หลัง reverse proxy ให้ตั้ง `TRUST_PROXY_HOPS` เป็นจำนวน proxy ระบบจะนับจากท้ายของ `X-Forwarded-For` เพราะค่าทางซ้ายเป็นค่าที่ client ส่งมาเองและปลอมได้
+- trigger บังคับ append-only กับทุก role และทำให้ลำดับ id ตรงกับลำดับ commit ของแต่ละ org การแบ่งหน้าด้วย cursor จึงไม่ข้าม log ที่ commit ช้า แลกกับการที่การเขียน audit ใน org เดียวกันต้องรอคิวกัน
+
 ## ฐานข้อมูล
 
 - แก้ schema ใน `packages/db/src/schema/` แล้วรัน `bun db:generate` และ `bun db:migrate`
