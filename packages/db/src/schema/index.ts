@@ -1,4 +1,6 @@
 export * from "./auth"
 export * from "./organizations"
 export * from "./memberships"
+export * from "./properties"
+export * from "./membership-properties"
 export * from "./audit-logs"

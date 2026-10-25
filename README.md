@@ -52,6 +52,17 @@ new Elysia()
   })
 ```
 
+**สิทธิ์ตาม role:** ใช้ `.use(rbacPlugin)` แล้วใส่ `permission: "<ชื่อ>"` คู่กับ `org: true` ถ้า role ไม่มีสิทธิ์จะได้ 403 รายชื่อ permission ทั้งหมดอยู่ใน [apps/api/src/rbac.ts](apps/api/src/rbac.ts) ที่เดียว ห้ามเขียน `if (role === …)` กระจายไว้ใน handler
+
+```ts
+.get("/audit-logs", handler, { org: true, permission: "audit.read" })
+```
+
+**ขอบเขตรายโครงการ:** RLS บังคับให้ owner เห็นทุกโครงการ ส่วน manager กับ staff เห็นเฉพาะโครงการที่ถูกมอบหมายใน `membership_properties`
+- manager ที่สร้างโครงการจะถูกมอบหมายให้ดูแลโครงการนั้นอัตโนมัติ (trigger แบบ BEFORE INSERT) จึงใช้ `INSERT ... RETURNING` ได้
+- ตารางที่ผูกกับโครงการควรใช้ `app_can_read_property()` และ `app_can_manage_property()` แบบเดียวกับ `properties`
+- ใน TypeScript ให้ใช้ `can(role, "properties.all")` แทน `role === "owner"`
+
 ## ฐานข้อมูล
 
 - แก้ schema ใน `packages/db/src/schema/` แล้วรัน `bun db:generate` และ `bun db:migrate`

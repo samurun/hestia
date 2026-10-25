@@ -32,19 +32,20 @@ export const orgPlugin = new Elysia({ name: "org" }).use(authPlugin).macro({
 
       // Read-only mode for unpaid orgs (phase 6) hooks in here.
 
-      const orgId = access.org.id
+      const { id: orgId, role } = access.org
       return {
         user,
         session,
         org: access.org,
         orgTx: <T>(fn: (tx: Tx) => Promise<T>) =>
           withContext(db, { orgId, userId: user.id }, async (tx) => {
-            // Re-check inside the transaction and hold the membership row, so
-            // a member removed after resolve() can't read or write here.
-            const [lock] = await tx.execute<{ ok: boolean }>(
-              sql`select app_lock_membership(${orgId}, ${user.id}) as ok`
+            // Re-check inside the transaction and hold the membership row
+            // (FOR SHARE), so a member removed or re-roled after resolve()
+            // can't act on the stale membership.
+            const [lock] = await tx.execute<{ role: string | null }>(
+              sql`select app_lock_membership(${orgId}, ${user.id}) as role`
             )
-            if (!lock?.ok) throw status(403, { message: NOT_MEMBER })
+            if (lock?.role !== role) throw status(403, { message: NOT_MEMBER })
             return fn(tx)
           }),
       }

@@ -37,6 +37,8 @@ export const memberships = pgTable(
   },
   (t) => [
     unique().on(t.orgId, t.userId),
+    // Target for composite FKs that pin child rows to the same org.
+    unique().on(t.id, t.orgId),
     index().on(t.userId),
     pgPolicy("org_isolation", {
       for: "select",
