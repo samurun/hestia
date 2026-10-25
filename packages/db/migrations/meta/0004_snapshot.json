@@ -1,0 +1,1061 @@
+{
+  "id": "ffc3d54a-747a-47fc-b212-044dbf049268",
+  "prevId": "dc5a1911-0480-4b34-9d27-a65cc2f1c181",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.accounts": {
+      "name": "accounts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "access_token": {
+          "name": "access_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "refresh_token": {
+          "name": "refresh_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_token": {
+          "name": "id_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "access_token_expires_at": {
+          "name": "access_token_expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "refresh_token_expires_at": {
+          "name": "refresh_token_expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scope": {
+          "name": "scope",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "password": {
+          "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "accounts_user_id_index": {
+          "name": "accounts_user_id_index",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "accounts_user_id_users_id_fk": {
+          "name": "accounts_user_id_users_id_fk",
+          "tableFrom": "accounts",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sessions": {
+      "name": "sessions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token": {
+          "name": "token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "active_org_id": {
+          "name": "active_org_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "sessions_user_id_index": {
+          "name": "sessions_user_id_index",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "sessions_user_id_users_id_fk": {
+          "name": "sessions_user_id_users_id_fk",
+          "tableFrom": "sessions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sessions_active_org_id_organizations_id_fk": {
+          "name": "sessions_active_org_id_organizations_id_fk",
+          "tableFrom": "sessions",
+          "tableTo": "organizations",
+          "columnsFrom": [
+            "active_org_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "sessions_token_unique": {
+          "name": "sessions_token_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "token"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email_verified": {
+          "name": "email_verified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "image": {
+          "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_active_org_id": {
+          "name": "last_active_org_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "users_last_active_org_id_organizations_id_fk": {
+          "name": "users_last_active_org_id_organizations_id_fk",
+          "tableFrom": "users",
+          "tableTo": "organizations",
+          "columnsFrom": [
+            "last_active_org_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.verifications": {
+      "name": "verifications",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "identifier": {
+          "name": "identifier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "verifications_identifier_index": {
+          "name": "verifications_identifier_index",
+          "columns": [
+            {
+              "expression": "identifier",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.organizations": {
+      "name": "organizations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tax_id": {
+          "name": "tax_id",
+          "type": "varchar(13)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "branch_code": {
+          "name": "branch_code",
+          "type": "varchar(5)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'00000'"
+        },
+        "is_vat_registered": {
+          "name": "is_vat_registered",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "promptpay_id": {
+          "name": "promptpay_id",
+          "type": "varchar(15)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "settings": {
+          "name": "settings",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{\"graceDays\":0,\"lateFeePerDay\":0,\"lateFeeCap\":null,\"bookingExpiryDays\":7,\"bookingForfeitOnCancel\":true}'::jsonb"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "org_isolation": {
+          "name": "org_isolation",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "hestia_app"
+          ],
+          "using": "id = nullif(current_setting('app.org_id', true), '')::uuid",
+          "withCheck": "id = nullif(current_setting('app.org_id', true), '')::uuid"
+        },
+        "member_read": {
+          "name": "member_read",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "hestia_app"
+          ],
+          "using": "nullif(current_setting('app.org_id', true), '')::uuid is null and id in (select org_id from memberships where user_id = nullif(current_setting('app.user_id', true), '')::uuid)"
+        }
+      },
+      "checkConstraints": {
+        "organizations_name_check": {
+          "name": "organizations_name_check",
+          "value": "char_length(\"organizations\".\"name\") between 1 and 200 and \"organizations\".\"name\" = btrim(\"organizations\".\"name\")"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.memberships": {
+      "name": "memberships",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "org_id": {
+          "name": "org_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "member_role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "memberships_user_id_index": {
+          "name": "memberships_user_id_index",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "memberships_org_id_organizations_id_fk": {
+          "name": "memberships_org_id_organizations_id_fk",
+          "tableFrom": "memberships",
+          "tableTo": "organizations",
+          "columnsFrom": [
+            "org_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "memberships_user_id_users_id_fk": {
+          "name": "memberships_user_id_users_id_fk",
+          "tableFrom": "memberships",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "memberships_orgId_userId_unique": {
+          "name": "memberships_orgId_userId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "org_id",
+            "user_id"
+          ]
+        },
+        "memberships_id_orgId_unique": {
+          "name": "memberships_id_orgId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "org_id"
+          ]
+        }
+      },
+      "policies": {
+        "org_isolation": {
+          "name": "org_isolation",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "hestia_app"
+          ],
+          "using": "org_id = nullif(current_setting('app.org_id', true), '')::uuid"
+        },
+        "own_memberships": {
+          "name": "own_memberships",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "hestia_app"
+          ],
+          "using": "nullif(current_setting('app.org_id', true), '')::uuid is null and user_id = nullif(current_setting('app.user_id', true), '')::uuid"
+        },
+        "owner_insert": {
+          "name": "owner_insert",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "hestia_app"
+          ],
+          "withCheck": "org_id = nullif(current_setting('app.org_id', true), '')::uuid and (\n        app_is_org_owner(org_id, nullif(current_setting('app.user_id', true), '')::uuid)\n        or (user_id = nullif(current_setting('app.user_id', true), '')::uuid and role = 'owner' and not app_org_has_members(org_id))\n      )"
+        },
+        "owner_update": {
+          "name": "owner_update",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "hestia_app"
+          ],
+          "using": "org_id = nullif(current_setting('app.org_id', true), '')::uuid and app_is_org_owner(org_id, nullif(current_setting('app.user_id', true), '')::uuid)",
+          "withCheck": "org_id = nullif(current_setting('app.org_id', true), '')::uuid and app_is_org_owner(org_id, nullif(current_setting('app.user_id', true), '')::uuid)"
+        },
+        "owner_delete": {
+          "name": "owner_delete",
+          "as": "PERMISSIVE",
+          "for": "DELETE",
+          "to": [
+            "hestia_app"
+          ],
+          "using": "org_id = nullif(current_setting('app.org_id', true), '')::uuid and app_is_org_owner(org_id, nullif(current_setting('app.user_id', true), '')::uuid)"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.properties": {
+      "name": "properties",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "org_id": {
+          "name": "org_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "properties_org_id_organizations_id_fk": {
+          "name": "properties_org_id_organizations_id_fk",
+          "tableFrom": "properties",
+          "tableTo": "organizations",
+          "columnsFrom": [
+            "org_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "properties_id_orgId_unique": {
+          "name": "properties_id_orgId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "org_id"
+          ]
+        }
+      },
+      "policies": {
+        "property_read": {
+          "name": "property_read",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "hestia_app"
+          ],
+          "using": "org_id = nullif(current_setting('app.org_id', true), '')::uuid and app_can_read_property(org_id, id, nullif(current_setting('app.user_id', true), '')::uuid)"
+        },
+        "property_insert": {
+          "name": "property_insert",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "hestia_app"
+          ],
+          "withCheck": "org_id = nullif(current_setting('app.org_id', true), '')::uuid and app_member_role(org_id, nullif(current_setting('app.user_id', true), '')::uuid) in ('owner', 'manager')"
+        },
+        "property_update": {
+          "name": "property_update",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "hestia_app"
+          ],
+          "using": "org_id = nullif(current_setting('app.org_id', true), '')::uuid and app_can_manage_property(org_id, id, nullif(current_setting('app.user_id', true), '')::uuid)",
+          "withCheck": "org_id = nullif(current_setting('app.org_id', true), '')::uuid and app_can_manage_property(org_id, id, nullif(current_setting('app.user_id', true), '')::uuid)"
+        },
+        "property_delete": {
+          "name": "property_delete",
+          "as": "PERMISSIVE",
+          "for": "DELETE",
+          "to": [
+            "hestia_app"
+          ],
+          "using": "org_id = nullif(current_setting('app.org_id', true), '')::uuid and app_can_manage_property(org_id, id, nullif(current_setting('app.user_id', true), '')::uuid)"
+        }
+      },
+      "checkConstraints": {
+        "properties_name_check": {
+          "name": "properties_name_check",
+          "value": "char_length(\"properties\".\"name\") between 1 and 200 and \"properties\".\"name\" = btrim(\"properties\".\"name\")"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.membership_properties": {
+      "name": "membership_properties",
+      "schema": "",
+      "columns": {
+        "org_id": {
+          "name": "org_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "membership_id": {
+          "name": "membership_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "property_id": {
+          "name": "property_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "membership_properties_property_id_index": {
+          "name": "membership_properties_property_id_index",
+          "columns": [
+            {
+              "expression": "property_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "membership_properties_membership_id_org_id_memberships_id_org_id_fk": {
+          "name": "membership_properties_membership_id_org_id_memberships_id_org_id_fk",
+          "tableFrom": "membership_properties",
+          "tableTo": "memberships",
+          "columnsFrom": [
+            "membership_id",
+            "org_id"
+          ],
+          "columnsTo": [
+            "id",
+            "org_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "membership_properties_property_id_org_id_properties_id_org_id_fk": {
+          "name": "membership_properties_property_id_org_id_properties_id_org_id_fk",
+          "tableFrom": "membership_properties",
+          "tableTo": "properties",
+          "columnsFrom": [
+            "property_id",
+            "org_id"
+          ],
+          "columnsTo": [
+            "id",
+            "org_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "membership_properties_membership_id_property_id_pk": {
+          "name": "membership_properties_membership_id_property_id_pk",
+          "columns": [
+            "membership_id",
+            "property_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {
+        "assignment_read": {
+          "name": "assignment_read",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "hestia_app"
+          ],
+          "using": "org_id = nullif(current_setting('app.org_id', true), '')::uuid and (app_is_org_owner(org_id, nullif(current_setting('app.user_id', true), '')::uuid) or membership_id in (select id from memberships where user_id = nullif(current_setting('app.user_id', true), '')::uuid))"
+        },
+        "owner_insert": {
+          "name": "owner_insert",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "hestia_app"
+          ],
+          "withCheck": "org_id = nullif(current_setting('app.org_id', true), '')::uuid and app_is_org_owner(org_id, nullif(current_setting('app.user_id', true), '')::uuid)"
+        },
+        "owner_delete": {
+          "name": "owner_delete",
+          "as": "PERMISSIVE",
+          "for": "DELETE",
+          "to": [
+            "hestia_app"
+          ],
+          "using": "org_id = nullif(current_setting('app.org_id', true), '')::uuid and app_is_org_owner(org_id, nullif(current_setting('app.user_id', true), '')::uuid)"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.audit_logs": {
+      "name": "audit_logs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "org_id": {
+          "name": "org_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actor_id": {
+          "name": "actor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "action": {
+          "name": "action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entity": {
+          "name": "entity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entity_id": {
+          "name": "entity_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "before": {
+          "name": "before",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "after": {
+          "name": "after",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ip": {
+          "name": "ip",
+          "type": "inet",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "audit_logs_org_id_created_at_index": {
+          "name": "audit_logs_org_id_created_at_index",
+          "columns": [
+            {
+              "expression": "org_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "audit_logs_org_id_organizations_id_fk": {
+          "name": "audit_logs_org_id_organizations_id_fk",
+          "tableFrom": "audit_logs",
+          "tableTo": "organizations",
+          "columnsFrom": [
+            "org_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "audit_logs_actor_id_users_id_fk": {
+          "name": "audit_logs_actor_id_users_id_fk",
+          "tableFrom": "audit_logs",
+          "tableTo": "users",
+          "columnsFrom": [
+            "actor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "org_isolation": {
+          "name": "org_isolation",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "hestia_app"
+          ],
+          "using": "org_id = nullif(current_setting('app.org_id', true), '')::uuid",
+          "withCheck": "org_id = nullif(current_setting('app.org_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.member_role": {
+      "name": "member_role",
+      "schema": "public",
+      "values": [
+        "owner",
+        "manager",
+        "staff"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
