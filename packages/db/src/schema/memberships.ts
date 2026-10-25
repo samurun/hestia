@@ -43,11 +43,12 @@ export const memberships = pgTable(
       to: appRole,
       using: sql`org_id = ${currentOrgId}`,
     }),
-    // A user can always see their own memberships across orgs.
+    // A user can see their own memberships across orgs, outside an org
+    // context only (see member_read on organizations).
     pgPolicy("own_memberships", {
       for: "select",
       to: appRole,
-      using: sql`user_id = ${currentUserId}`,
+      using: sql`${currentOrgId} is null and user_id = ${currentUserId}`,
     }),
     // Only owners manage members. The one exception bootstraps a new org:
     // its creator may add themselves as owner while it has no members.

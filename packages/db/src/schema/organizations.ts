@@ -11,6 +11,7 @@ import {
 
 import {
   appRole,
+  currentOrgId,
   currentUserId,
   id,
   orgIsolation,
@@ -56,11 +57,13 @@ export const organizations = pgTable(
       sql`char_length(${t.name}) between 1 and 200 and ${t.name} = btrim(${t.name})`
     ),
     orgIsolation("id"),
-    // Lets a user list every org they belong to, before picking one.
+    // Lets a user list every org they belong to, before picking one. Only
+    // outside an org context: permissive policies are OR'd, so inside one
+    // this would widen org_isolation to every org the user is in.
     pgPolicy("member_read", {
       for: "select",
       to: appRole,
-      using: sql`id in (select org_id from memberships where user_id = ${currentUserId})`,
+      using: sql`${currentOrgId} is null and id in (select org_id from memberships where user_id = ${currentUserId})`,
     }),
   ]
 )
