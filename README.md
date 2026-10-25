@@ -7,7 +7,7 @@
 | Path | หน้าที่ |
 |---|---|
 | `apps/web` | Next.js + shadcn (พอร์ต 3000) |
-| `apps/api` | Elysia API (พอร์ต 3001, เอกสาร API ที่ `/openapi`) |
+| `apps/api` | Elysia API (พอร์ต 3001, Swagger UI ที่ `/swagger`) |
 | `packages/db` | Drizzle schema, migration, seed |
 | `packages/ui` | shadcn components |
 
