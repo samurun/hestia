@@ -6,6 +6,9 @@ import { Elysia, t } from "elysia"
 import { authOpenAPI } from "./auth"
 import { db } from "./db"
 import { env } from "./env"
+import { findMembership } from "./memberships"
+import { OrgMembership } from "./org-model"
+import { organizationRoutes } from "./organizations"
 import { authPlugin } from "./plugins/auth"
 
 const authDocs = await authOpenAPI()
@@ -43,8 +46,11 @@ export const app = new Elysia()
   )
   .get(
     "/me",
-    ({ user }) => ({
+    async ({ user, session }) => ({
       user: { id: user.id, name: user.name, email: user.email },
+      activeOrg: session.activeOrgId
+        ? await findMembership(user.id, session.activeOrgId)
+        : null,
     }),
     {
       auth: true,
@@ -55,11 +61,13 @@ export const app = new Elysia()
             name: t.String(),
             email: t.String({ format: "email" }),
           }),
+          activeOrg: t.Nullable(OrgMembership),
         }),
         401: t.Object({ message: t.String() }),
       },
-      detail: { tags: ["Auth"], summary: "Current user" },
+      detail: { tags: ["Auth"], summary: "Current user and active org" },
     }
   )
+  .use(organizationRoutes)
 
 export type App = typeof app

@@ -11,6 +11,9 @@ export const appRole = pgRole("hestia_app").existing()
  */
 export const currentOrgId = sql`nullif(current_setting('app.org_id', true), '')::uuid`
 
+/** The signed-in user set by `withContext()`, or NULL. */
+export const currentUserId = sql`nullif(current_setting('app.user_id', true), '')::uuid`
+
 export const id = () =>
   uuid()
     .primaryKey()

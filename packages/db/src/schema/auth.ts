@@ -8,6 +8,7 @@ import {
 } from "drizzle-orm/pg-core"
 
 import { id, timestamps } from "./_columns"
+import { organizations } from "./organizations"
 
 // Tables owned by Better Auth. They are global (no org_id, no RLS);
 // field names must match Better Auth's model fields.
@@ -18,6 +19,10 @@ export const users = pgTable("users", {
   email: text().notNull().unique(),
   emailVerified: boolean().notNull().default(false),
   image: text(),
+  // Restored as the active org on the next sign-in.
+  lastActiveOrgId: uuid().references(() => organizations.id, {
+    onDelete: "set null",
+  }),
   ...timestamps,
 })
 
@@ -32,6 +37,10 @@ export const sessions = pgTable(
     expiresAt: timestamp({ withTimezone: true }).notNull(),
     ipAddress: text(),
     userAgent: text(),
+    // Better Auth additional field; see apps/api/src/auth.ts.
+    activeOrgId: uuid().references(() => organizations.id, {
+      onDelete: "set null",
+    }),
     ...timestamps,
   },
   (t) => [index().on(t.userId)]

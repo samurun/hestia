@@ -48,6 +48,9 @@ integration และ e2e ใช้ฐานข้อมูล `hestia_test` ท
   - `hestia_app` เป็น role ที่ API ใช้ และถูกบังคับด้วย RLS
 - ตารางของ org ต้องมี `org_id` และใส่ `orgIsolation()` ไว้ใน policy
 - query ข้อมูลของ org ต้องรันผ่าน `withOrg(db, orgId, (tx) => …)` ถ้าไม่ใช้จะไม่เห็นข้อมูลเลย
+- query ที่ต้องรู้ว่าใครล็อกอินอยู่ แต่ยังไม่ได้เลือก org (เช่น ดูรายการ org ของตัวเอง) ให้ใช้ `withContext(db, { userId }, …)`
+- `memberships` เพิ่ม แก้ หรือลบได้เฉพาะ owner ของ org นั้น RLS บังคับข้อนี้ผ่าน function ใน `0002_memberships.sql`
+- ห้ามเชื่อ `session.activeOrgId` ตรงๆ ต้องตรวจด้วย `findMembership()` ทุกครั้ง
 - เงินเก็บเป็นสตางค์ (จำนวนเต็ม)
 
 ## เพิ่ม shadcn component

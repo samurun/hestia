@@ -1,6 +1,21 @@
-import { boolean, jsonb, pgTable, text, varchar } from "drizzle-orm/pg-core"
+import { sql } from "drizzle-orm"
+import {
+  boolean,
+  check,
+  jsonb,
+  pgPolicy,
+  pgTable,
+  text,
+  varchar,
+} from "drizzle-orm/pg-core"
 
-import { id, orgIsolation, timestamps } from "./_columns"
+import {
+  appRole,
+  currentUserId,
+  id,
+  orgIsolation,
+  timestamps,
+} from "./_columns"
 
 /** Money values are in satang. */
 export type OrgSettings = {
@@ -35,5 +50,17 @@ export const organizations = pgTable(
       .default(defaultOrgSettings),
     ...timestamps,
   },
-  () => [orgIsolation("id")]
+  (t) => [
+    check(
+      "organizations_name_check",
+      sql`char_length(${t.name}) between 1 and 200 and ${t.name} = btrim(${t.name})`
+    ),
+    orgIsolation("id"),
+    // Lets a user list every org they belong to, before picking one.
+    pgPolicy("member_read", {
+      for: "select",
+      to: appRole,
+      using: sql`id in (select org_id from memberships where user_id = ${currentUserId})`,
+    }),
+  ]
 )

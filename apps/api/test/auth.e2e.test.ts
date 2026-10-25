@@ -1,32 +1,10 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test"
+import { describe, expect, test } from "bun:test"
 
 import { createClient } from "./http"
+import { useServer } from "./server"
 
 // Runs the real server process over HTTP, the way the web app talks to it.
-const PORT = 3999
-const BASE = `http://localhost:${PORT}`
-let server: ReturnType<typeof Bun.spawn>
-
-beforeAll(async () => {
-  server = Bun.spawn(["bun", "src/index.ts"], {
-    cwd: `${import.meta.dir}/..`,
-    env: { ...process.env, API_PORT: String(PORT) },
-    stdout: "ignore",
-    stderr: "inherit",
-  })
-  for (let i = 0; i < 50; i++) {
-    const ok = await fetch(`${BASE}/health`)
-      .then((r) => r.ok)
-      .catch(() => false)
-    if (ok) return
-    await Bun.sleep(100)
-  }
-  throw new Error("API did not start")
-})
-
-afterAll(() => {
-  server.kill()
-})
+const BASE = useServer(3999)
 
 describe("auth over HTTP", () => {
   test("sign up → /me → sign out → sign in", async () => {
