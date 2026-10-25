@@ -25,3 +25,21 @@ export function pickDefaultOrg(
   }
   return orgs.length === 1 ? orgs[0]!.id : null
 }
+
+export type OrgAccess =
+  { ok: true; org: OrgMembership } | { ok: false; message: string }
+
+export const NOT_MEMBER = "Not a member of this organization"
+
+/**
+ * Whether a request may act in the session's active org. `membership` must
+ * be findMembership(user, activeOrgId), never derived from the session.
+ */
+export function checkOrgAccess(
+  activeOrgId: string | null | undefined,
+  membership: OrgMembership | null
+): OrgAccess {
+  if (!activeOrgId) return { ok: false, message: "No active organization" }
+  if (!membership) return { ok: false, message: NOT_MEMBER }
+  return { ok: true, org: membership }
+}

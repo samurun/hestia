@@ -8,7 +8,7 @@ import { db } from "./db"
 import { env } from "./env"
 import { findMembership } from "./memberships"
 import { OrgMembership } from "./org-model"
-import { organizationRoutes } from "./organizations"
+import { currentOrganizationRoutes, organizationRoutes } from "./organizations"
 import { authPlugin } from "./plugins/auth"
 
 const authDocs = await authOpenAPI()
@@ -69,5 +69,6 @@ export const app = new Elysia()
     }
   )
   .use(organizationRoutes)
+  .use(currentOrganizationRoutes)
 
 export type App = typeof app
