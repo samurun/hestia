@@ -146,6 +146,7 @@ describe("rbac", () => {
         .select()
         .from(schema.auditLogs)
         .where(eq(schema.auditLogs.action, "membership.properties.set"))
+        .orderBy(schema.auditLogs.id)
     )
     expect(audit).toHaveLength(2)
     expect(audit.at(-1)?.after).toEqual({ propertyIds: [properties.y] })
