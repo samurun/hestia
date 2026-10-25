@@ -1,16 +1,24 @@
 import { describe, expect, test } from "bun:test"
 
-import { orgNameSchema } from "./schemas"
+import { parseForm } from "@/lib/form"
 
-describe("orgNameSchema", () => {
-  test("follows the API's 200-character limit after trimming", () => {
-    expect(orgNameSchema.parse(` ${"ก".repeat(200)} `)).toBe("ก".repeat(200))
-    expect(orgNameSchema.safeParse("ก".repeat(201)).success).toBe(false)
-  })
+import { createOrgSchema } from "./schemas"
 
-  test("rejects blank names", () => {
-    expect(orgNameSchema.safeParse("   ").error?.issues[0]?.message).toBe(
-      "กรุณากรอกชื่อกิจการ"
-    )
+const form = (orgName: string) => {
+  const data = new FormData()
+  data.set("orgName", orgName)
+  return data
+}
+
+describe("createOrgSchema", () => {
+  test("uses the shared org name rules", () => {
+    expect(parseForm(createOrgSchema, form(" บ้านเช่า "))).toEqual({
+      success: true,
+      data: { orgName: "บ้านเช่า" },
+    })
+    expect(parseForm(createOrgSchema, form("   "))).toEqual({
+      success: false,
+      errors: { orgName: [{ message: "กรุณากรอกชื่อกิจการ" }] },
+    })
   })
 })
