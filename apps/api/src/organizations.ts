@@ -1,13 +1,14 @@
 import { eq, schema, withContext } from "@workspace/db"
 import { Elysia, t } from "elysia"
 
+import { createAuditor } from "./audit"
 import { db } from "./db"
 import { findMembership, listMemberships, setActiveOrg } from "./memberships"
 import { NOT_MEMBER, OrgMembership } from "./org-model"
 import { authPlugin } from "./plugins/auth"
 import { orgPlugin } from "./plugins/org"
 
-const { auditLogs, defaultOrgSettings, memberships, organizations } = schema
+const { defaultOrgSettings, memberships, organizations } = schema
 
 const OrgSettings = t.Object({
   graceDays: t.Integer(),
@@ -41,7 +42,7 @@ export const organizationRoutes = new Elysia({ prefix: "/organizations" })
   })
   .post(
     "/",
-    async ({ user, session, body, status }) => {
+    async ({ user, session, body, status, request, server }) => {
       // The id is generated here so app.org_id can be set before the insert;
       // RLS rejects rows whose org isn't the current one.
       const orgId = Bun.randomUUIDv7()
@@ -56,9 +57,13 @@ export const organizationRoutes = new Elysia({ prefix: "/organizations" })
           await tx
             .insert(memberships)
             .values({ orgId, userId: user.id, role: "owner" })
-          await tx.insert(auditLogs).values({
+          const audit = createAuditor({
             orgId,
             actorId: user.id,
+            request,
+            server,
+          })
+          await audit(tx, {
             action: "organization.create",
             entity: "organization",
             entityId: orgId,

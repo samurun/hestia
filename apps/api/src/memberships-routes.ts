@@ -4,7 +4,7 @@ import { Elysia, status, t } from "elysia"
 import { rbacPlugin } from "./plugins/rbac"
 import { can } from "./rbac"
 
-const { auditLogs, membershipProperties, memberships, properties } = schema
+const { membershipProperties, memberships, properties } = schema
 
 const Message = t.Object({ message: t.String() })
 
@@ -12,7 +12,7 @@ export const membershipRoutes = new Elysia({ prefix: "/memberships" })
   .use(rbacPlugin)
   .put(
     "/:membershipId/properties",
-    ({ params, body, org, user, orgTx }) =>
+    ({ params, body, org, orgTx, audit }) =>
       orgTx(async (tx) => {
         // FOR UPDATE serializes concurrent replaces of the same member.
         const [member] = await tx
@@ -59,9 +59,7 @@ export const membershipRoutes = new Elysia({ prefix: "/memberships" })
             )
             .onConflictDoNothing()
         }
-        await tx.insert(auditLogs).values({
-          orgId: org.id,
-          actorId: user.id,
+        await audit(tx, {
           action: "membership.properties.set",
           entity: "membership",
           entityId: member.id,

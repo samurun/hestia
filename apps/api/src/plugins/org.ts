@@ -2,6 +2,7 @@ import { sql, withContext, type Tx } from "@workspace/db"
 import { Elysia, status } from "elysia"
 
 import { auth } from "../auth"
+import { createAuditor } from "../audit"
 import { db } from "../db"
 import { findMembership } from "../memberships"
 import { checkOrgAccess, NOT_MEMBER } from "../org-model"
@@ -15,7 +16,8 @@ type AuthContext = {
 /**
  * Adds the `org: true` route option on top of `auth: true`: the caller must be
  * a member of the session's active org. Handlers get `org` (with the caller's
- * role) and `orgTx`, which runs queries under that org's RLS context.
+ * role), `orgTx`, which runs queries under that org's RLS context, and
+ * `audit(tx, entry)`.
  */
 export const orgPlugin = new Elysia({ name: "org" }).use(authPlugin).macro({
   org: {
@@ -48,6 +50,13 @@ export const orgPlugin = new Elysia({ name: "org" }).use(authPlugin).macro({
             if (lock?.role !== role) throw status(403, { message: NOT_MEMBER })
             return fn(tx)
           }),
+        /** Logs a change in the same transaction as the change itself. */
+        audit: createAuditor({
+          orgId,
+          actorId: user.id,
+          request: ctx.request,
+          server: ctx.server,
+        }),
       }
     },
   },
