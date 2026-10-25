@@ -3,6 +3,7 @@ import { openapi } from "@elysiajs/openapi"
 import { sql } from "@workspace/db"
 import { Elysia, t } from "elysia"
 
+import { auditRoutes } from "./audit-routes"
 import { authOpenAPI } from "./auth"
 import { db } from "./db"
 import { env } from "./env"
@@ -72,5 +73,6 @@ export const app = new Elysia()
   .use(organizationRoutes)
   .use(currentOrganizationRoutes)
   .use(membershipRoutes)
+  .use(auditRoutes)
 
 export type App = typeof app
