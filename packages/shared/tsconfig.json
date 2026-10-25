@@ -1,0 +1,5 @@
+{
+  "extends": "@workspace/typescript-config/bun.json",
+  "include": ["."],
+  "exclude": ["node_modules"]
+}
