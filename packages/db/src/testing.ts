@@ -40,9 +40,12 @@ export async function resetTestDatabase(ownerUrl: string) {
   const tables = await sql<{ tablename: string }[]>`
     select tablename from pg_tables where schemaname = 'public'`
   if (tables.length > 0) {
-    await sql.unsafe(
-      `truncate ${tables.map((t) => `"${t.tablename}"`).join(", ")} cascade`
-    )
+    // replica mode skips triggers, including audit_logs' append-only guard.
+    await sql.unsafe(`
+      set session_replication_role = replica;
+      truncate ${tables.map((t) => `"${t.tablename}"`).join(", ")} cascade;
+      set session_replication_role = default;
+    `)
   }
   await sql.end()
 }
@@ -53,5 +56,18 @@ function pgOptions(url: URL) {
     port: Number(url.port || 5432),
     username: decodeURIComponent(url.username),
     password: decodeURIComponent(url.password),
+  }
+}
+
+/** Runs raw SQL as the schema owner, for tests that must bypass the app role. */
+export async function asSchemaOwner<T>(
+  ownerUrl: string,
+  fn: (sql: postgres.Sql) => Promise<T>
+): Promise<T> {
+  const sql = postgres(ownerUrl, { max: 1, onnotice: () => {} })
+  try {
+    return await fn(sql)
+  } finally {
+    await sql.end()
   }
 }

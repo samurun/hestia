@@ -1,10 +1,25 @@
-import { index, inet, jsonb, pgTable, text, uuid } from "drizzle-orm/pg-core"
+import { sql } from "drizzle-orm"
+import {
+  index,
+  inet,
+  jsonb,
+  pgPolicy,
+  pgTable,
+  text,
+  uuid,
+} from "drizzle-orm/pg-core"
 
-import { createdAt, id, orgIsolation } from "./_columns"
+import { appRole, createdAt, currentOrgId, id } from "./_columns"
 import { users } from "./auth"
 import { organizations } from "./organizations"
 
-/** Append-only: rows are never updated or deleted. */
+/**
+ * Append-only: the app role may insert and read, never update or delete.
+ * Triggers in migrations/0005_audit_append_only.sql enforce this for every
+ * role and keep ids in commit order for paging; they also overwrite `id`
+ * and `createdAt` on insert.
+ * `action` is "<entity>.<verb>", e.g. "organization.create".
+ */
 export const auditLogs = pgTable(
   "audit_logs",
   {
@@ -22,5 +37,19 @@ export const auditLogs = pgTable(
     ip: inet(),
     createdAt: createdAt(),
   },
-  (t) => [index().on(t.orgId, t.createdAt), orgIsolation()]
+  (t) => [
+    // ids are uuidv7, so (org_id, id) also orders by time for paging.
+    index().on(t.orgId, t.id),
+    index().on(t.orgId, t.entityId),
+    pgPolicy("org_isolation", {
+      for: "select",
+      to: appRole,
+      using: sql`org_id = ${currentOrgId}`,
+    }),
+    pgPolicy("audit_insert", {
+      for: "insert",
+      to: appRole,
+      withCheck: sql`org_id = ${currentOrgId}`,
+    }),
+  ]
 )
