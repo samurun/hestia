@@ -1,5 +1,12 @@
 import { eq, schema, withContext } from "@workspace/db"
-import { Elysia, t } from "elysia"
+import {
+  createOrganizationBody,
+  messageError,
+  setActiveOrganizationBody,
+  validationError,
+} from "@workspace/shared/schemas"
+import { Elysia } from "elysia"
+import { z } from "zod"
 
 import { createAuditor } from "./audit"
 import { db } from "./db"
@@ -10,34 +17,29 @@ import { orgPlugin } from "./plugins/org"
 
 const { defaultOrgSettings, memberships, organizations } = schema
 
-const OrgSettings = t.Object({
-  graceDays: t.Integer(),
-  lateFeePerDay: t.Integer(),
-  lateFeeCap: t.Nullable(t.Integer()),
-  bookingExpiryDays: t.Integer(),
-  bookingForfeitOnCancel: t.Boolean(),
+const OrgSettings = z.object({
+  graceDays: z.int(),
+  lateFeePerDay: z.int(),
+  lateFeeCap: z.int().nullable(),
+  bookingExpiryDays: z.int(),
+  bookingForfeitOnCancel: z.boolean(),
 })
 
-const CurrentOrganization = t.Composite([
-  OrgMembership,
-  t.Object({
-    taxId: t.Nullable(t.String()),
-    branchCode: t.String(),
-    isVatRegistered: t.Boolean(),
-    address: t.Nullable(t.String()),
-    promptpayId: t.Nullable(t.String()),
-    settings: OrgSettings,
-  }),
-])
-
-const Message = t.Object({ message: t.String() })
+const CurrentOrganization = OrgMembership.extend({
+  taxId: z.string().nullable(),
+  branchCode: z.string(),
+  isVatRegistered: z.boolean(),
+  address: z.string().nullable(),
+  promptpayId: z.string().nullable(),
+  settings: OrgSettings,
+})
 const notMember = { message: NOT_MEMBER }
 
 export const organizationRoutes = new Elysia({ prefix: "/organizations" })
   .use(authPlugin)
   .get("/", ({ user }) => listMemberships(user.id), {
     auth: true,
-    response: { 200: t.Array(OrgMembership), 401: Message },
+    response: { 200: z.array(OrgMembership), 401: messageError },
     detail: { tags: ["Organizations"], summary: "List my organizations" },
   })
   .post(
@@ -81,13 +83,13 @@ export const organizationRoutes = new Elysia({ prefix: "/organizations" })
     },
     {
       auth: true,
-      // Trim before validation so the length limit applies to what is stored.
-      transform({ body }) {
-        const input = body as { name?: unknown }
-        if (typeof input?.name === "string") input.name = input.name.trim()
+      // Trims before checking length, so the limit applies to what is stored.
+      body: createOrganizationBody,
+      response: {
+        201: OrgMembership,
+        401: messageError,
+        422: validationError,
       },
-      body: t.Object({ name: t.String({ minLength: 1, maxLength: 200 }) }),
-      response: { 201: OrgMembership, 401: Message },
       detail: {
         tags: ["Organizations"],
         summary: "Create an organization",
@@ -111,8 +113,13 @@ export const organizationRoutes = new Elysia({ prefix: "/organizations" })
     },
     {
       auth: true,
-      body: t.Object({ orgId: t.String({ format: "uuid" }) }),
-      response: { 200: OrgMembership, 401: Message, 403: Message },
+      body: setActiveOrganizationBody,
+      response: {
+        200: OrgMembership,
+        401: messageError,
+        403: messageError,
+        422: validationError,
+      },
       detail: {
         tags: ["Organizations"],
         summary: "Switch active organization",
@@ -149,7 +156,11 @@ export const currentOrganizationRoutes = new Elysia({ prefix: "/organization" })
     },
     {
       org: true,
-      response: { 200: CurrentOrganization, 401: Message, 403: Message },
+      response: {
+        200: CurrentOrganization,
+        401: messageError,
+        403: messageError,
+      },
       detail: {
         tags: ["Organizations"],
         summary: "Active organization details",

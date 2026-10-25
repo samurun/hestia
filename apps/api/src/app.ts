@@ -1,7 +1,9 @@
 import { cors } from "@elysiajs/cors"
 import { openapi } from "@elysiajs/openapi"
 import { sql } from "@workspace/db"
-import { Elysia, t } from "elysia"
+import { messageError, uuid } from "@workspace/shared/schemas"
+import { Elysia } from "elysia"
+import { z } from "zod"
 
 import { auditRoutes } from "./audit-routes"
 import { authOpenAPI } from "./auth"
@@ -20,6 +22,12 @@ export const app = new Elysia()
   .use(
     openapi({
       path: "/swagger",
+      // Schemas are zod (@workspace/shared). Document the input side, i.e.
+      // what callers send (a coerced query number is a string on the wire).
+      mapJsonSchema: {
+        zod: (schema: z.ZodType) =>
+          z.toJSONSchema(schema, { io: "input", unrepresentable: "any" }),
+      },
       documentation: {
         info: { title: "Hestia API", version: "0.0.1" },
         components: authDocs.components as never,
@@ -40,8 +48,8 @@ export const app = new Elysia()
     },
     {
       response: {
-        200: t.Object({ status: t.Literal("ok"), db: t.Literal("up") }),
-        503: t.Object({ status: t.Literal("error"), db: t.Literal("down") }),
+        200: z.object({ status: z.literal("ok"), db: z.literal("up") }),
+        503: z.object({ status: z.literal("error"), db: z.literal("down") }),
       },
       detail: { tags: ["System"], summary: "Health check" },
     }
@@ -57,15 +65,11 @@ export const app = new Elysia()
     {
       auth: true,
       response: {
-        200: t.Object({
-          user: t.Object({
-            id: t.String({ format: "uuid" }),
-            name: t.String(),
-            email: t.String({ format: "email" }),
-          }),
-          activeOrg: t.Nullable(OrgMembership),
+        200: z.object({
+          user: z.object({ id: uuid, name: z.string(), email: z.email() }),
+          activeOrg: OrgMembership.nullable(),
         }),
-        401: t.Object({ message: t.String() }),
+        401: messageError,
       },
       detail: { tags: ["Auth"], summary: "Current user and active org" },
     }
