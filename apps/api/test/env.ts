@@ -7,5 +7,7 @@ process.env.TEST_DATABASE_MIGRATE_URL ??=
   "postgres://hestia:hestia@localhost:5433/hestia_test"
 process.env.BETTER_AUTH_SECRET = "test-secret-test-secret-test-secret!!"
 process.env.BETTER_AUTH_URL = "http://localhost:3001"
+// The dev .env prints mail (with invite links); tests stay quiet.
+process.env.MAIL_TRANSPORT = "none"
 // The web e2e suite runs Next on its own port and points this at it.
 process.env.WEB_ORIGIN = process.env.E2E_WEB_ORIGIN ?? "http://localhost:3000"
