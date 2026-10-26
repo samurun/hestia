@@ -31,6 +31,27 @@ export async function requireActiveOrg() {
   return { ...me, activeOrg: me.activeOrg }
 }
 
+/** Members and invitations of the active org; owners only (else null). */
+export const getTeam = cache(async () => {
+  const api = await serverApi()
+  const [members, invitations] = await Promise.all([
+    api.memberships.get(),
+    api.invitations.get(),
+  ])
+  if (!members.data || !invitations.data) return null
+  return { members: members.data, invitations: invitations.data }
+})
+
+/** What an invite link points to, or null if the token is unknown. */
+export const getInvitePreview = cache(async (token: string) => {
+  const { data } = await (
+    await serverApi()
+  ).invitations
+    .preview({ token })
+    .get()
+  return data ?? null
+})
+
 export const getOrganizations = cache(async () => {
   const { data } = await (await serverApi()).organizations.get()
   return data ?? []

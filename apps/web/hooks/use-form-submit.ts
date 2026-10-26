@@ -17,7 +17,9 @@ const unexpected = "เกิดข้อผิดพลาด กรุณา�
  */
 export function useFormSubmit<S extends z.ZodObject>(
   schema: S,
-  submit: Submit<z.infer<S>>
+  submit: Submit<z.infer<S>>,
+  /** Forms that stay on the page clear themselves; others navigate away. */
+  { resetOnSuccess = false }: { resetOnSuccess?: boolean } = {}
 ) {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors<z.infer<S>>>({})
   const [error, setError] = useState<string>()
@@ -25,18 +27,22 @@ export function useFormSubmit<S extends z.ZodObject>(
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    const form = event.currentTarget
     setError(undefined)
-    const parsed = parseForm(schema, new FormData(event.currentTarget))
+    const parsed = parseForm(schema, new FormData(form))
     setFieldErrors(parsed.success ? {} : parsed.errors)
     if (!parsed.success) return
 
     setPending(true)
     const message = await submit(parsed.data).catch(() => unexpected)
-    // On success the page navigates away, so it stays pending until then.
     if (message) {
       setError(message)
       setPending(false)
+    } else if (resetOnSuccess) {
+      form.reset()
+      setPending(false)
     }
+    // Otherwise the page navigates away, so it stays pending until then.
   }
 
   return { onSubmit, fieldErrors, error, pending }

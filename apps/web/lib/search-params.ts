@@ -9,3 +9,10 @@ export const loginSearchParams = {
 }
 
 export const loadLoginSearchParams = createLoader(loginSearchParams)
+
+export const signupSearchParams = {
+  /** Token from an invite link: sign up to join that org instead. */
+  invite: parseAsString,
+}
+
+export const loadSignupSearchParams = createLoader(signupSearchParams)
