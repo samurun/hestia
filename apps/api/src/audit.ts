@@ -35,11 +35,7 @@ export function createAuditor({
 }) {
   let ip: string | null | undefined
   return async (tx: Tx, entry: AuditEntry) => {
-    ip ??= clientIp({
-      forwardedFor: request.headers.get("x-forwarded-for"),
-      socketIp: server?.requestIP(request)?.address ?? null,
-      trustedHops: env.TRUST_PROXY_HOPS,
-    })
+    ip ??= requestIp(request, server)
     await tx.insert(schema.auditLogs).values({
       orgId,
       actorId,
@@ -54,3 +50,12 @@ export function createAuditor({
 }
 
 export type Auditor = ReturnType<typeof createAuditor>
+
+/** The caller's IP for audit rows (see client-ip.ts for proxy handling). */
+export function requestIp(request: Request, server: IpServer): string | null {
+  return clientIp({
+    forwardedFor: request.headers.get("x-forwarded-for"),
+    socketIp: server?.requestIP(request)?.address ?? null,
+    trustedHops: env.TRUST_PROXY_HOPS,
+  })
+}

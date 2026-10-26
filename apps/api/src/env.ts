@@ -8,6 +8,11 @@ export const envSchema = z.object({
   BETTER_AUTH_URL: z.url().default("http://localhost:3001"),
   /** Reverse proxies in front of the API; 0 ignores X-Forwarded-For. */
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
+  /**
+   * "console" prints outgoing mail (with its links) to the log, for local
+   * development only. "none" sends nothing and logs no message content.
+   */
+  MAIL_TRANSPORT: z.enum(["console", "none"]).default("none"),
 })
 
 export const env = envSchema.parse(process.env)
