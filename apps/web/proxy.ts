@@ -2,6 +2,8 @@ import { getSessionCookie } from "better-auth/cookies"
 import { NextResponse, type NextRequest } from "next/server"
 
 const publicPaths = new Set(["/login", "/signup"])
+// Invite links must open for people without an account yet.
+const publicPrefixes = ["/invite/"]
 
 /**
  * Optimistic check only: no session cookie on a private page → /login.
@@ -10,7 +12,11 @@ const publicPaths = new Set(["/login", "/signup"])
  */
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl
-  if (publicPaths.has(pathname) || getSessionCookie(request)) {
+  if (
+    publicPaths.has(pathname) ||
+    publicPrefixes.some((prefix) => pathname.startsWith(prefix)) ||
+    getSessionCookie(request)
+  ) {
     return NextResponse.next()
   }
 

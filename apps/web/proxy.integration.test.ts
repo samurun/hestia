@@ -30,6 +30,7 @@ describe("proxy", () => {
     for (const res of [
       proxy(request("/login")),
       proxy(request("/signup")),
+      proxy(request("/invite/abc")),
       proxy(request("/", session)),
       proxy(request("/onboarding", session)),
     ]) {

@@ -7,3 +7,6 @@ import { z } from "zod"
 export const loginSchema = z.object({ email, password })
 
 export const signupSchema = signUpBody.extend({ orgName })
+
+/** Joining through an invite: no org of their own to create. */
+export const inviteSignupSchema = signUpBody

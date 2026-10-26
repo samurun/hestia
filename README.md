@@ -78,7 +78,7 @@ new Elysia()
   })
 ```
 
-**สิทธิ์ตาม role:** ใช้ `.use(rbacPlugin)` แล้วใส่ `permission: "<ชื่อ>"` คู่กับ `org: true` ถ้า role ไม่มีสิทธิ์จะได้ 403 รายชื่อ permission ทั้งหมดอยู่ใน [apps/api/src/rbac.ts](apps/api/src/rbac.ts) ที่เดียว ห้ามเขียน `if (role === …)` กระจายไว้ใน handler
+**สิทธิ์ตาม role:** ใช้ `.use(rbacPlugin)` แล้วใส่ `permission: "<ชื่อ>"` คู่กับ `org: true` ถ้า role ไม่มีสิทธิ์จะได้ 403 รายชื่อ permission ทั้งหมดอยู่ใน [packages/shared/src/rbac.ts](packages/shared/src/rbac.ts) ที่เดียว ห้ามเขียน `if (role === …)` กระจายไว้ใน handler
 
 ```ts
 .get("/audit-logs", handler, { org: true, permission: "audit.read" })
@@ -88,6 +88,15 @@ new Elysia()
 - manager ที่สร้างโครงการจะถูกมอบหมายให้ดูแลโครงการนั้นอัตโนมัติ (trigger แบบ BEFORE INSERT) จึงใช้ `INSERT ... RETURNING` ได้
 - ตารางที่ผูกกับโครงการควรใช้ `app_can_read_property()` และ `app_can_manage_property()` แบบเดียวกับ `properties`
 - ใน TypeScript ให้ใช้ `can(role, "properties.all")` แทน `role === "owner"`
+
+## ทีมงานและคำเชิญ
+
+- **เชิญ:** owner เชิญที่หน้า `/team` (`POST /invitations`) ลิงก์ใช้ได้ 7 วัน ระบบเก็บแค่ hash ของ token ไว้ใน DB และเชิญอีเมลเดิมซ้ำจะยกเลิกคำเชิญเก่าให้
+- **ส่งลิงก์:** ยังไม่มีผู้ให้บริการอีเมล API คืน `url` ให้ owner คัดลอกไปส่งเอง (เช่นทาง LINE) ส่วน `mailer.ts` จะพิมพ์อีเมลออก console ก็ต่อเมื่อตั้ง `MAIL_TRANSPORT=console` (ใช้แค่ตอน dev เพราะลิงก์เชิญเป็นเหมือนกุญแจ) ค่าเริ่มต้นคือ `none` ไม่ log เนื้อหาอีเมล
+- **รับคำเชิญ:** ผู้ถูกเชิญเปิด `/invite/<token>` ต้องสมัครหรือล็อกอินด้วย**อีเมลที่ถูกเชิญ** ระบบจะสร้าง membership และมอบหมายโครงการผ่าน `app_accept_invitation()` (SECURITY DEFINER เพราะผู้ถูกเชิญยังไม่เป็นสมาชิก)
+- **owner อย่างน้อย 1 คน:** trigger ไม่ให้ลดสิทธิ์หรือลบ owner คนสุดท้ายของ org ถ้าจะลบบัญชีของคนที่เป็น owner คนเดียว ต้องโอนสิทธิ์ owner หรือลบ org ก่อน
+- **รับคำเชิญ:** สร้าง membership, มอบหมายโครงการ, สลับ org และเขียน audit ใน transaction เดียว
+- **ตารางสิทธิ์:** อยู่ใน `packages/shared` (`can()`) API ใช้บังคับสิทธิ์ web ใช้แค่ซ่อนเมนู
 
 ## Audit log
 

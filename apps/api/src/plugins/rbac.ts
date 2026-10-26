@@ -1,7 +1,7 @@
 import { Elysia } from "elysia"
 
 import type { OrgMembership } from "../org-model"
-import { can, type Permission } from "../rbac"
+import { can, type Permission } from "@workspace/shared"
 import { orgPlugin } from "./org"
 
 /**

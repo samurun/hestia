@@ -1,6 +1,15 @@
-import type { MemberRole } from "@workspace/db/schema"
+/** Must match the member_role enum in packages/db (checked by an API test). */
+export const memberRoles = ["owner", "manager", "staff"] as const
+export type MemberRole = (typeof memberRoles)[number]
 
-// The one place that decides what each role may do (docs/SPEC.md §4).
+export const roleLabels: Record<MemberRole, string> = {
+  owner: "เจ้าของ",
+  manager: "ผู้จัดการ",
+  staff: "พนักงาน",
+}
+
+// The one place that decides what each role may do (docs/SPEC.md §4). The
+// API enforces it; the web uses it only to hide what the user can't do.
 // Property scoping is separate: RLS limits managers and staff to the
 // properties assigned to them.
 
